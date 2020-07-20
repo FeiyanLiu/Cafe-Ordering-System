@@ -92,21 +92,16 @@
                     Date now=new Date();
                     SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
                     String date=df.format(now);
-                    request.setAttribute("date",date);
+
                     while(rs.next())
                         orderNO=rs.getInt("num");
-                    request.setAttribute("orderNO",orderNO+1);
+                    orderNO++;
+
 
                 %>
-                <td colspan="5" style=" background-color: antiquewhite;font-size: 15px">订单号:<%=orderNO+1%> </td>
+                <td colspan="5" style=" background-color: antiquewhite;font-size: 15px">订单号:<%=orderNO%> </td>
                 </thead>
                 <tbody>
-                <%
-
-                    rs = stmt.executeQuery("SELECT * FROM shoppingCart");
-                    while (rs.next()) {
-                        money+=rs.getInt("quantity")*rs.getInt("unitprice");
-                %>
                 <tr>
                     <td class="image">Image</td>
                     <td class="name">Product Name</td>
@@ -114,6 +109,28 @@
                     <td class="price">Unit Price</td>
                     <td class="total">Total</td>
                 </tr>
+                <%
+                      String userName = "1";
+                    int have=0;
+                    Cookie[] cookies = request.getCookies();
+//保存有cookie对象
+                    if(cookies != null && cookies.length > 0){
+                        for(Cookie c: cookies){
+                            if(c.getName().equals("user")){
+                                userName = c.getValue();
+                                have=1;
+                            }
+                        }
+                    }
+                    if(have==0)
+                    {
+                        response.sendRedirect("login.jsp");
+                    }
+                    rs = stmt.executeQuery("SELECT * FROM shoppingCart where username='"+userName+"'");
+                    while (rs.next()) {
+                        money+=rs.getInt("quantity")*rs.getInt("unitprice");
+                %>
+
 
                 <tr>
                     <form>
@@ -150,9 +167,7 @@
                 </tbody>
             </table>
         </div>
-        <div class="buttons">
-            <div class="center"><a href="#" class="button" style="height: auto" onclick="confirmOrder(this.form)"><span >确认下单</span></a></div>
-        </div>
+        <div class="center"> <form method="post"><button class="button" style="height: auto" onclick="confirmOrder(this.form)"><span >确认下单</span></button></form></div>
     </form>
 
 
