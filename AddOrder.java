@@ -82,6 +82,8 @@ public class AddOrder extends HttpServlet {
 
 			rs = stmt.executeQuery("SELECT * FROM shoppingCart where username='"+userName+"'");
 			while (rs.next()) {
+			    int sales=0;
+			    int foodNum=0;
 				Order order=new Order();
 				order.setOrderNo(orderNO+1);
 				order.setConsumerName(rs.getString("username"));
@@ -90,13 +92,19 @@ public class AddOrder extends HttpServlet {
 				order.setPrice(rs.getInt("unitprice"));
 				order.setOrderDate(date);
 				orderSql.add(order);
-				String s="select foodnum from food where foodname= '"+order.getFoodName()+"'";
+				String s="select foodnum sales from food where foodname= '"+order.getFoodName()+"'";
 				ResultSet rs2=stmt.executeQuery(s);
-				String sql= "update food set foodNum=" +(rs2.getInt("foodnum")-order.getQuantity()) + " where foodName='" + order.getFoodName()+ "'";
+				while(rs2.next())
+                {
+                    sales=rs2.getInt("sales");
+                    foodNum=rs2.getInt("foodnum");
+                }
+				String sql= "update food set foodNum=" +(foodNum-order.getQuantity()) + " where foodName='" + order.getFoodName()+ "'";
 				stmt.executeUpdate(sql);  //库存修改
 				sql="delete from shoppingCart where foodname='"+order.getFoodName()+"' and username=' "+order.getConsumerName()+"'";
 				stmt.executeUpdate(sql);  //删除购物车数据
-
+                sql="update food set sales=" +(sales+order.getQuantity()) + " where foodName='" + order.getFoodName()+ "'";
+                stmt.executeUpdate(sql);  //修改销量
 			}
 		} catch (ClassNotFoundException | SQLException e) {
 			e.printStackTrace();
