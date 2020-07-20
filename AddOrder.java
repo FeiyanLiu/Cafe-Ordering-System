@@ -10,6 +10,7 @@ import java.util.Calendar;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -52,11 +53,34 @@ public class AddOrder extends HttpServlet {
 			Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
 			Statement stmt = conn.createStatement();
 			ResultSet rs;
-			rs = stmt.executeQuery("SELECT * FROM shoppingCart");
+            String userName = "1";
+            int have=0;
+            Cookie[] cookies = request.getCookies();
+//保存有cookie对象
+            if(cookies != null && cookies.length > 0){
+                for(Cookie c: cookies){
+                    if(c.getName().equals("user")){
+                        userName = c.getValue();
+                        have=1;
+                    }
+                }
+            }
+            if(have==0)
+            {
+                response.sendRedirect("login.jsp");
+            }
 
-			int orderNO= (int) request.getAttribute("orderNO");
-			Date now=new Date();
-			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
+            rs = stmt.executeQuery("SELECT count(distinct orderNo) num FROM orders");
+            int orderNO=0;
+            Date now=new Date();
+            SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
+            String date=df.format(now);
+
+            while(rs.next())
+                orderNO=rs.getInt("num");
+            orderNO++;
+
+			rs = stmt.executeQuery("SELECT * FROM shoppingCart where username='"+userName+"'");
 			while (rs.next()) {
 				Order order=new Order();
 				order.setOrderNo(orderNO+1);
@@ -64,7 +88,7 @@ public class AddOrder extends HttpServlet {
 				order.setFoodName(rs.getString("foodname"));
 				order.setQuantity(rs.getInt("quantity"));
 				order.setPrice(rs.getInt("unitprice"));
-				order.setOrderDate(df.format(now));
+				order.setOrderDate(date);
 				orderSql.add(order);
 				String s="select foodnum from food where foodname= '"+order.getFoodName()+"'";
 				ResultSet rs2=stmt.executeQuery(s);
